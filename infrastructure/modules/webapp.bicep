@@ -25,12 +25,6 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      appSettings: [
-        {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '20'
-        }
-      ]
       linuxFxVersion: 'NODE|20-lts'
     }
     httpsOnly: true
