@@ -2,7 +2,7 @@ param location string
 param webAppSubnet string = 'webAppSubnet'
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
-  name: 'VNetBicep'
+  name: 'ReactVnet'
   location: location
   properties: {
     addressSpace: {
