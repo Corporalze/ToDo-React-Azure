@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: bicepVariables
+
+stages:
+- stage: DeployBicep
+  jobs:
+  - deployment: DeployBicep
+    environment: 'BicepEnvironment'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureResourceManagerTemplateDeployment@3
+            inputs:
+              azureResourceManagerConnection: $(azureServiceConnection)
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: $(resourceGroupName)
+              location: 'northeurope'
+              templateLocation: 'Linked artifact'
+              csmFile: 'main.bicep'
+              csmParametersFile: 'main.parameters.json'
+            displayName: 'Deploy Bicep File'
+
+- stage: BuildAndDeploy
+  jobs:
+  - job: BuildAndDeploy
+    steps:
+    - task: UseNode@1
+      inputs:
+        version: '14.x'
+        checkLatest: true
+
+    - script: npm install
+      displayName: 'Install dependencies'
+
+    - script: npm run build
+      displayName: 'Build the project'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '.next'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        replaceExistingArchive: true
+
+    - upload: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+      artifact: 'drop'
+
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        appType: webApp
+        appName: 'wapp-reactApp'
+        package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        startupCommand: 'npm start'
