@@ -1,13 +1,13 @@
 param location string
 
-module vnetModule './Modules/vnet.bicep' = {
+module vnetModule './modules/vnet.bicep' = {
   name: 'deployVNet'
   params:{
     location: location
   }
 }
 
-module webApp 'Modules/webapp.bicep' = {
+module webApp 'modules/webapp.bicep' = {
   name:'deployWebApp'
   params:{
     vnetId:vnetModule.outputs.vnetId
