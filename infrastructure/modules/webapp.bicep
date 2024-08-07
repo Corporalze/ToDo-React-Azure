@@ -25,7 +25,13 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'DOCKER|mcr.microsoft.com/azure-app-service/samples/node:20-lts'
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '20'
+        }
+      ]
+      linuxFxVersion: 'NODE|20-lts'
     }
     httpsOnly: true
     clientAffinityEnabled: true
