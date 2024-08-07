@@ -25,12 +25,13 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'DOCKER|mcr.microsoft.com/azure-app-service/samples/node:12-lts'
+      linuxFxVersion: 'DOCKER|mcr.microsoft.com/azure-app-service/samples/node:20-lts'
     }
-    httpsOnly:true
-    clientAffinityEnabled:true
+    httpsOnly: true
+    clientAffinityEnabled: true
   }
 }
+
 
 /*resource subnet 'Microsoft.Web/sites/virtualNetworkConnections@2023-12-01' = {
   name:'vnetIntegration'
