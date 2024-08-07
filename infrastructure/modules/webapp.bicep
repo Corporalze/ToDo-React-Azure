@@ -1,5 +1,5 @@
-param vnetId string
-param subnetId string
+//param vnetId string
+//param subnetId string
 param location string
 
 var webAppName = 'reactApp'
@@ -32,7 +32,7 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   }
 }
 
-resource subnet 'Microsoft.Web/sites/virtualNetworkConnections@2023-12-01' = {
+/*resource subnet 'Microsoft.Web/sites/virtualNetworkConnections@2023-12-01' = {
   name:'vnetIntegration'
   parent:webApp
   properties:{
@@ -48,3 +48,4 @@ resource adskdg 'Microsoft.Web/sites/networkConfig@2023-12-01' = {
     subnetResourceId:subnetId
   }
 }
+*/

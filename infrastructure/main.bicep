@@ -10,8 +10,8 @@ module vnetModule './modules/vnet.bicep' = {
 module webApp 'modules/webapp.bicep' = {
   name:'deployWebApp'
   params:{
-    vnetId:vnetModule.outputs.vnetId
-    subnetId:vnetModule.outputs.waSubnet
+    //vnetId:vnetModule.outputs.vnetId
+    //subnetId:vnetModule.outputs.waSubnet
     location:location
   }
   dependsOn:[
