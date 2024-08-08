@@ -61,4 +61,4 @@ stages:
         appType: webApp
         appName: 'wapp-reactApp'
         package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-        startupCommand: 'npm start'
+        startupCommand: 'npm run dev'
