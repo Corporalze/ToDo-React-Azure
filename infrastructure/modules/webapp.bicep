@@ -12,10 +12,11 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   properties: {
     reserved: true
   }
+  
   sku: {
-    name: 'S1'
-    tier: 'Standard'
-    size: 'S1'
+    name: 'P1v3'
+    tier: 'PremiumV3'
+    size: 'P1v3'
   }
 }
 
@@ -25,7 +26,7 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'NODE|20-lts'
+      linuxFxVersion: 'NODE|18-lts'
     }
     httpsOnly: true
     clientAffinityEnabled: false
