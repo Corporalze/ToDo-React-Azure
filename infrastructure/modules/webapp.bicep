@@ -28,7 +28,7 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
       linuxFxVersion: 'NODE|20-lts'
     }
     httpsOnly: true
-    clientAffinityEnabled: true
+    clientAffinityEnabled: false
   }
 }
 
@@ -42,7 +42,7 @@ resource webApp 'Microsoft.Web/sites@2020-06-01' = {
   }
 }
 
-resource adskdg 'Microsoft.Web/sites/networkConfig@2023-12-01' = {
+resource networkConfig 'Microsoft.Web/sites/networkConfig@2023-12-01' = {
   name: 'virtualNetwork'
   parent:webApp
   properties:{
