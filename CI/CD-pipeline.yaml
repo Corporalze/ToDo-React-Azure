@@ -58,7 +58,7 @@ stages:
       inputs:
         azureSubscription: '$(azureServiceConnection)'  # From the variable group
         appType: webApp
-        appName: '$(webAppName)-$(environmentVar)'  # Using the environment variable
+        appName: '$(webAppName)'  # Using the environment variable
         package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
         startupCommand: 'npm run start'
 
