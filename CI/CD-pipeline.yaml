@@ -1,0 +1,80 @@
+trigger:
+- none
+ # branches:
+  #  include:
+   #   - main
+    #  - dev
+
+parameters:
+  - name: environment
+    displayName: 'Environment'
+    type: string
+    default: 'dev'
+    values:
+      - dev
+      - test
+      - prod
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: bicepVariables
+
+stages:
+- stage: BuildAndDeploy
+  jobs:
+  - job: Build
+    steps:
+    - task: UseNode@1
+      inputs:
+        version: '18.x'
+        checkLatest: true
+
+    - script: npm install
+      displayName: 'Install dependencies'
+
+    - script: npm run build
+      displayName: 'Build the project'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '.next'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        replaceExistingArchive: true
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        artifactName: 'drop'
+
+  - job: Deploy
+    dependsOn: Build
+    steps:
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        appType: webApp
+        appName: '$(wapp-reactApp)-$(parameters.environment)' 
+        package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        startupCommand: 'npm run start'
+
+- stage: Test
+  dependsOn: BuildAndDeploy
+  condition: eq(parameters['environment'], 'test')
+  jobs:
+  - job: TestJob
+    steps:
+    - script: npm run test
+      displayName: 'Run Unit Tests'
+
+- stage: DeployToProd
+  dependsOn: BuildAndDeploy
+  condition: eq(parameters['environment'], 'prod')
+  jobs:
+  - job: DeployToProduction
+    steps:
+    - script: echo "Deploying to production"
+      displayName: 'Deploy to Production'
