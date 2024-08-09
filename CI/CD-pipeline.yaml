@@ -1,9 +1,8 @@
 trigger:
-- none
- # branches:
-  #  include:
-   #   - main
-    #  - dev
+  branches:
+    include:
+      - main
+      - dev
 
 parameters:
   - name: environment
@@ -19,7 +18,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: bicepVariables
+- group: bicepVariables  # Centralized variable group
+- name: environmentVar
+  value: ${{ parameters.environment }}  # Assigning parameter to a variable
 
 stages:
 - stage: BuildAndDeploy
@@ -55,15 +56,15 @@ stages:
     steps:
     - task: AzureWebApp@1
       inputs:
-        azureSubscription: '$(azureServiceConnection)'
+        azureSubscription: '$(azureServiceConnection)'  # From the variable group
         appType: webApp
-        appName: '$(wapp-reactApp)-$(parameters.environment)' 
+        appName: '$(wapp-reactApp)-$(environmentVar)'  # Using the environment variable
         package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
         startupCommand: 'npm run start'
 
 - stage: Test
   dependsOn: BuildAndDeploy
-  condition: eq(parameters['environment'], 'test')
+  condition: eq(variables['environmentVar'], 'test')  # Using the environment variable in the condition
   jobs:
   - job: TestJob
     steps:
@@ -72,7 +73,7 @@ stages:
 
 - stage: DeployToProd
   dependsOn: BuildAndDeploy
-  condition: eq(parameters['environment'], 'prod')
+  condition: eq(variables['environmentVar'], 'prod')  # Using the environment variable in the condition
   jobs:
   - job: DeployToProduction
     steps:
