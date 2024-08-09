@@ -38,7 +38,7 @@ jobs:
     inputs:
       azureSubscription: '$(azureServiceConnection)'
       appType: webApp
-      appName: '$(wapp-reactApp)-$(environment)'  # Example of environment-specific app naming
+      appName: '$(webAppName)'  # Example of environment-specific app naming
       package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
       startupCommand: 'npm run start'
 
