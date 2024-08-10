@@ -27,7 +27,7 @@ jobs:
     - script: npm install
       displayName: 'Install Dependencies'
 
-    - script: npm run lint
+    - script: npx next lint
       displayName: 'Run Linting'
 
     - script: npm run format
@@ -64,8 +64,10 @@ jobs:
         archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
         replaceExistingArchive: true
 
-    - upload: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-      artifact: 'drop'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        artifact: 'drop'
 
 - job: IntegrationTests
   displayName: 'Run Integration Tests'
