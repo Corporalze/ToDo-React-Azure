@@ -1,58 +1,99 @@
-trigger:
-- none
+trigger: none
+
+variables:
+  azureServiceConnection: '<your-azure-service-connection>'
+  webAppName: '<your-web-app-name>'
+
+parameters:
+  - name: environment
+    type: string
+    default: 'Dev'
+    values:
+      - 'Dev'
+      - 'Test'
+      - 'Prod'
 
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-- group: bicepVariables
-- name: environment
-  value: 'dev'  # Change to 'test' or 'prod' for different environments
-
 jobs:
-- job: BuildAndDeploy
+- job: PreCommitChecks
+  displayName: 'Pre-commit Checks'
   steps:
-  - task: UseNode@1
-    inputs:
-      version: '18.x'
-      checkLatest: true
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js (v18)'
 
-  - script: npm install
-    displayName: 'Install dependencies'
+    - script: npm install
+      displayName: 'Install Dependencies'
 
-  - script: npm run build
-    displayName: 'Build the project'
+    - script: npm run lint
+      displayName: 'Run Linting'
 
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: '.next'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-      replaceExistingArchive: true
+    - script: npm run format
+      displayName: 'Run Prettier'
 
-  - upload: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-    artifact: 'drop'
+    - script: npm test
+      displayName: 'Run Unit Tests'
 
-  - task: AzureWebApp@1
-    inputs:
-      azureSubscription: '$(azureServiceConnection)'
-      appType: webApp
-      appName: '$(webAppName)'  # Example of environment-specific app naming
-      package: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-      startupCommand: 'npm run start'
-
-# Add more jobs for different environments if needed
-- job: Test
-  dependsOn: BuildAndDeploy
-  condition: and(succeeded(), eq(variables['environment'], 'test'))
+- job: SourceControlChecks
+  displayName: 'Source Control Checks'
   steps:
-  - script: echo "Running tests"
-    displayName: 'Run Tests'
+    - script: echo "Branch protection and other source control checks should be configured in the repo settings"
+      displayName: 'Check Branch Protection & Source Control Policies'
 
-- job: DeployToProd
-  dependsOn: BuildAndDeploy
-  condition: and(succeeded(), eq(variables['environment'], 'prod'))
+- job: Build
+  displayName: 'Build and Package'
   steps:
-  - script: echo "Deploying to production"
-    displayName: 'Deploy to Production'
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js (v18)'
+
+    - script: npm install
+      displayName: 'Install Dependencies'
+
+    - script: npm run build
+      displayName: 'Build Project'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '.next'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        replaceExistingArchive: true
+
+    - upload: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+      artifact: 'drop'
+
+- job: IntegrationTests
+  displayName: 'Run Integration Tests'
+  steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js (v18)'
+
+    - script: npm install
+      displayName: 'Install Dependencies'
+
+    - script: npm run test:integration
+      displayName: 'Run Integration Tests'
+
+- deployment: Deploy
+  displayName: 'Deploy to $(parameters.environment) Environment'
+  environment: $(parameters.environment)
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - download: current
+          artifact: 'drop'
+          
+        - task: AzureWebApp@1
+          inputs:
+            azureSubscription: '$(azureServiceConnection)'
+            appName: '$(webAppName)'
+            package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
