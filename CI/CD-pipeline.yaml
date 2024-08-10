@@ -15,83 +15,78 @@ parameters:
 pool:
   vmImage: 'ubuntu-latest'
 
-jobs:
-- job: PreCommitChecks
-  displayName: 'Pre-commit Checks'
-  steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '18.x'
-      displayName: 'Install Node.js (v18)'
-
-    - script: npm install
-      displayName: 'Install Dependencies'
-
-    - script: npx next lint
-      displayName: 'Run Linting'
-
-    - script: npm run format
-      displayName: 'Run Prettier'
-
-- job: SourceControlChecks
-  displayName: 'Source Control Checks'
-  steps:
-    - script: echo "Branch protection and other source control checks should be configured in the repo settings"
-      displayName: 'Check Branch Protection & Source Control Policies'
-
-- job: Build
-  displayName: 'Build and Package'
-  steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '18.x'
-      displayName: 'Install Node.js (v18)'
-
-    - script: npm install
-      displayName: 'Install Dependencies'
-
-    - script: npm run build
-      displayName: 'Build Project'
-
-    - task: ArchiveFiles@2
-      inputs:
-        rootFolderOrFile: '.next'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-        replaceExistingArchive: true
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-        artifact: 'drop'
-
-- job: IntegrationTests
-  displayName: 'Run Integration Tests'
-  steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '18.x'
-      displayName: 'Install Node.js (v18)'
-
-    - script: npm install
-      displayName: 'Install Dependencies'
-
-    - script: npx jest
-      displayName: 'Run Integration Tests'
-
-- deployment: Deploy
-  displayName: 'Deploy to $(environment) Environment'
-  environment: $(environment)
-  strategy:
-    runOnce:
-      deploy:
-        steps:
-        - download: current
-          artifact: 'drop'
-          
-        - task: AzureWebApp@1
+stages:
+- stage: Setup
+  displayName: 'Setup Environment'
+  jobs:
+    - job: InstallAndBuild
+      displayName: 'Install Node.js, Dependencies, and Build'
+      steps:
+        - task: NodeTool@0
           inputs:
-            azureSubscription: '$(azureServiceConnection)'
-            appName: '$(webAppName)'
-            package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
+            versionSpec: '18.x'
+          displayName: 'Install Node.js'
+
+        - script: npm install
+          displayName: 'Install Dependencies'
+
+        - script: npm run build
+          displayName: 'Build Project'
+
+        - task: ArchiveFiles@2
+          inputs:
+            rootFolderOrFile: '.next'
+            includeRootFolder: false
+            archiveType: 'zip'
+            archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+            replaceExistingArchive: true
+
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+            artifact: 'drop'
+
+    - job: PreCommitChecks
+      displayName: 'Pre-commit Checks'
+      steps:
+        - script: npx next lint
+          displayName: 'Run Linting'
+
+        - script: npm run format
+          displayName: 'Run Prettier'
+
+    - job: SourceControlChecks
+      displayName: 'Source Control Checks'
+      steps:
+        - script: echo "Branch protection and other source control checks should be configured in the repo settings"
+          displayName: 'Check Branch Protection & Source Control Policies'
+
+- stage: IntegrationTests
+  displayName: 'Run Integration Tests'
+  dependsOn: Setup
+  jobs:
+    - job: IntegrationTests
+      displayName: 'Run Integration Tests'
+      steps:
+        - script: npx jest
+          displayName: 'Run Integration Tests'
+
+- stage: Deploy
+  displayName: 'Deploy'
+  dependsOn: IntegrationTests
+  jobs:
+    - deployment: Deploy
+      displayName: 'Deploy to $(environment) Environment'
+      environment: $(environment)
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - download: current
+              artifact: 'drop'
+              
+            - task: AzureWebApp@1
+              inputs:
+                azureSubscription: '$(azureServiceConnection)'
+                appName: '$(webAppName)'
+                package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
