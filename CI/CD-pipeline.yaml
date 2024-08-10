@@ -15,72 +15,77 @@ parameters:
 pool:
   vmImage: 'ubuntu-latest'
 
-stages:
-- stage: Setup
-  displayName: 'Setup Environment'
-  jobs:
-    - job: InstallAndBuild
-      displayName: 'Install Dependencies,checks and packaging'
-      steps:
-        - task: NodeTool@0
-          inputs:
-            versionSpec: '18.x'
-          displayName: 'Install Node.js'
+jobs:
+- job: PreCommitChecks
+  displayName: 'Pre-commit Checks'
+  steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
 
-        - script: npm install
-          displayName: 'Install Dependencies'
+    - script: npm install
+      displayName: 'Install Dependencies'
 
-        - script: npx next lint
-          displayName: 'Run Linting'
+    - script: npx next lint
+      displayName: 'Run Linting'
 
-        - script: npm run format
-          displayName: 'Run Prettier'
+    - script: npm run format
+      displayName: 'Run Prettier'
 
-        - script: npm run build
-          displayName: 'Build Project'
+- job: Build
+  displayName: 'Build and Package'
+  steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
 
-    - job: PreCommitChecks
-      displayName: 'Pre-commit Checks'
-      steps:
-        - task: ArchiveFiles@2
-          inputs:
-            rootFolderOrFile: '.next'
-            includeRootFolder: false
-            archiveType: 'zip'
-            archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-            replaceExistingArchive: true
+    - script: npm install
+      displayName: 'Install Dependencies'
 
-        - task: PublishPipelineArtifact@1
-          inputs:
-            targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-            artifact: 'drop'
+    - script: npm run build
+      displayName: 'Build Project'
 
-- stage: IntegrationTests
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '.next'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        replaceExistingArchive: true
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+        artifact: 'drop'
+
+- job: IntegrationTests
   displayName: 'Run Integration Tests'
-  dependsOn: Setup
-  jobs:
-    - job: IntegrationTests
-      displayName: 'Run Integration Tests'
-      steps:
-        - script: npx jest
-          displayName: 'Run Integration Tests'
+  steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
 
-- stage: Deploy
-  displayName: 'Deploy'
-  dependsOn: IntegrationTests
-  jobs:
-    - deployment: Deploy
-      displayName: 'Deploy to $(environment) Environment'
-      environment: $(environment)
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - download: current
-              artifact: 'drop'
-              
-            - task: AzureWebApp@1
-              inputs:
-                azureSubscription: '$(azureServiceConnection)'
-                appName: '$(webAppName)'
-                package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
+    - script: npm install
+      displayName: 'Install Dependencies'
+
+    - script: npx jest
+      displayName: 'Run Integration Tests'
+
+- deployment: Deploy
+  displayName: 'Deploy to $(environment) Environment'
+  environment: $(environment)
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - download: current
+          artifact: 'drop'
+          
+        - task: AzureWebApp@1
+          inputs:
+            azureSubscription: '$(azureServiceConnection)'
+            appName: '$(webAppName)'
+            package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
