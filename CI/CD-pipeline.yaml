@@ -1,8 +1,7 @@
 trigger: none
 
 variables:
-  azureServiceConnection: '<your-azure-service-connection>'
-  webAppName: '<your-web-app-name>'
+  - group: bicepVariables 
 
 parameters:
   - name: environment
@@ -83,8 +82,8 @@ jobs:
       displayName: 'Run Integration Tests'
 
 - deployment: Deploy
-  displayName: 'Deploy to $(parameters.environment) Environment'
-  environment: $(parameters.environment)
+  displayName: 'Deploy to $(environment) Environment'
+  environment: $(environment)
   strategy:
     runOnce:
       deploy:
