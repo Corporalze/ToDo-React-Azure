@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start -p 8080",
     "lint": "next lint",
-    "format": "prettier --write src/**/*.js",
-    "test:integration": "jest --config jest.integration.config.js"
+    "format": "prettier --write src/**/*.js"
   },
   "dependencies": {
     "jest": "^29.7.0",

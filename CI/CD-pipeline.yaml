@@ -80,7 +80,7 @@ jobs:
     - script: npm install
       displayName: 'Install Dependencies'
 
-    - script: npm run test:integration
+    - script: npx jest
       displayName: 'Run Integration Tests'
 
 - deployment: Deploy
