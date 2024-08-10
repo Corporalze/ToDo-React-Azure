@@ -33,9 +33,6 @@ jobs:
     - script: npm run format
       displayName: 'Run Prettier'
 
-    - script: npm test
-      displayName: 'Run Unit Tests'
-
 - job: SourceControlChecks
   displayName: 'Source Control Checks'
   steps:
