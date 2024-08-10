@@ -20,7 +20,7 @@ stages:
   displayName: 'Setup Environment'
   jobs:
     - job: InstallAndBuild
-      displayName: 'Install Node.js, Dependencies, and Build'
+      displayName: 'Install Dependencies,checks and packaging'
       steps:
         - task: NodeTool@0
           inputs:
@@ -30,9 +30,18 @@ stages:
         - script: npm install
           displayName: 'Install Dependencies'
 
+        - script: npx next lint
+          displayName: 'Run Linting'
+
+        - script: npm run format
+          displayName: 'Run Prettier'
+
         - script: npm run build
           displayName: 'Build Project'
 
+    - job: PreCommitChecks
+      displayName: 'Pre-commit Checks'
+      steps:
         - task: ArchiveFiles@2
           inputs:
             rootFolderOrFile: '.next'
@@ -45,21 +54,6 @@ stages:
           inputs:
             targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
             artifact: 'drop'
-
-    - job: PreCommitChecks
-      displayName: 'Pre-commit Checks'
-      steps:
-        - script: npx next lint
-          displayName: 'Run Linting'
-
-        - script: npm run format
-          displayName: 'Run Prettier'
-
-    - job: SourceControlChecks
-      displayName: 'Source Control Checks'
-      steps:
-        - script: echo "Branch protection and other source control checks should be configured in the repo settings"
-          displayName: 'Check Branch Protection & Source Control Policies'
 
 - stage: IntegrationTests
   displayName: 'Run Integration Tests'
