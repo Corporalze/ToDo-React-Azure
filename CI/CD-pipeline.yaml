@@ -22,20 +22,12 @@ jobs:
 - job: PreCommitChecks
   displayName: 'Pre-commit Checks'
   steps:
-    - task: Cache@2
-      inputs:
-        key: 'node | "$(Agent.OS)" | package-lock.json'
-        restoreKeys: |
-          node | "$(Agent.OS)"
-        path: '$(Pipeline.Workspace)/.npm'
-      displayName: 'Cache npm'
-
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
 
     - script: npx next lint
@@ -48,21 +40,21 @@ jobs:
   dependsOn: PreCommitChecks
   displayName: 'Build and Package'
   steps:
-    - task: Cache@2
-      inputs:
-        key: 'node | "$(Agent.OS)" | package-lock.json'
-        restoreKeys: |
-          node | "$(Agent.OS)"
-        path: '$(Pipeline.Workspace)/.npm'
-      displayName: 'Cache npm'
-
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
+
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: '$(HOME)/.npm'
+      displayName: 'Cache npm packages'
 
     - script: npm run build
       displayName: 'Build Project'
@@ -84,20 +76,12 @@ jobs:
   dependsOn: Build
   displayName: 'Run Integration Tests'
   steps:
-    - task: Cache@2
-      inputs:
-        key: 'node | "$(Agent.OS)" | package-lock.json'
-        restoreKeys: |
-          node | "$(Agent.OS)"
-        path: '$(Pipeline.Workspace)/.npm'
-      displayName: 'Cache npm'
-
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
 
     - script: npx jest
@@ -109,10 +93,6 @@ jobs:
   dependsOn: IntegrationTests
   strategy:
     runOnce:
-      preDeployApprovals:
-        - name: 'Approvers'
-          reviewers:
-            - email@example.com
       deploy:
         steps:
         - download: current
