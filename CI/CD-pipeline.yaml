@@ -1,4 +1,7 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - master
 
 variables:
   - group: bicepVariables 
@@ -44,6 +47,14 @@ jobs:
 
     - script: npm install
       displayName: 'Install Dependencies'
+
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: '$(Pipeline.Workspace)/.npm'
+      displayName: 'Cache npm packages'
 
     - script: npm run build
       displayName: 'Build Project'
