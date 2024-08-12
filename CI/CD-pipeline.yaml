@@ -27,6 +27,12 @@ jobs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        path: '$(Pipeline.Workspace)/.npm'
+        cacheHitVar: 'CACHE_RESTORED'
+
     - script: npm install
       displayName: 'Install Dependencies'
 
@@ -44,6 +50,12 @@ jobs:
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
+
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        path: '$(Pipeline.Workspace)/.npm'
+        cacheHitVar: 'CACHE_RESTORED'
 
     - script: npm install
       displayName: 'Install Dependencies'
@@ -73,11 +85,17 @@ jobs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        path: '$(Pipeline.Workspace)/.npm'
+        cacheHitVar: 'CACHE_RESTORED'
+
     - script: npm install
       displayName: 'Install Dependencies'
 
-    - script: npx jest
-      displayName: 'Run Integration Tests'
+    - script: npx jest --coverage
+      displayName: 'Run Tests with Coverage'
 
 - deployment: Deploy
   displayName: 'Deploy to $(environment) Environment'
