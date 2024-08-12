@@ -33,7 +33,7 @@ jobs:
         path: '$(Pipeline.Workspace)/.npm'
         cacheHitVar: 'CACHE_RESTORED'
 
-    - script: npm install
+    - script: npm ci
       displayName: 'Install Dependencies'
 
     - script: npx next lint
@@ -57,7 +57,7 @@ jobs:
         path: '$(Pipeline.Workspace)/.npm'
         cacheHitVar: 'CACHE_RESTORED'
 
-    - script: npm install
+    - script: npm ci
       displayName: 'Install Dependencies'
 
     - script: npm run build
@@ -91,7 +91,7 @@ jobs:
         path: '$(Pipeline.Workspace)/.npm'
         cacheHitVar: 'CACHE_RESTORED'
 
-    - script: npm install
+    - script: npm ci
       displayName: 'Install Dependencies'
 
     - script: npx jest --coverage
