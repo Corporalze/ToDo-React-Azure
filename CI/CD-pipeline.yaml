@@ -19,18 +19,43 @@ pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-- job: PreCommitChecks
-  displayName: 'Pre-commit Checks'
+- job: InstallDependencies
+  displayName: 'Install Dependencies and Cache'
   steps:
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: '$(HOME)/.npm'
+      displayName: 'Cache npm packages'
+
     - script: npm install
       displayName: 'Install Dependencies'
 
-    - script: npx next lint
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'node_modules'
+        artifact: 'node_modules'
+
+- job: PreCommitChecks
+  dependsOn: InstallDependencies
+  displayName: 'Pre-commit Checks'
+  steps:
+    - download: current
+      artifact: 'node_modules'
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+
+    - script: npm run lint
       displayName: 'Run Linting'
 
     - script: npm run format
@@ -40,13 +65,13 @@ jobs:
   dependsOn: PreCommitChecks
   displayName: 'Build and Package'
   steps:
+    - download: current
+      artifact: 'node_modules'
+
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
-
-    - script: npm install
-      displayName: 'Install Dependencies'
 
     - script: npm run build
       displayName: 'Build Project'
@@ -68,15 +93,15 @@ jobs:
   dependsOn: Build
   displayName: 'Run Integration Tests'
   steps:
+    - download: current
+      artifact: 'node_modules'
+
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - script: npm install
-      displayName: 'Install Dependencies'
-
-    - script: npx jest
+    - script: npm run test
       displayName: 'Run Integration Tests'
 
 - deployment: Deploy
