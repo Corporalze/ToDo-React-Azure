@@ -27,13 +27,7 @@ jobs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - task: Cache@2
-      inputs:
-        key: 'npm | "$(Agent.OS)" | package-lock.json'
-        path: '$(Pipeline.Workspace)/.npm'
-        cacheHitVar: 'CACHE_RESTORED'
-
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
 
     - script: npx next lint
@@ -51,13 +45,7 @@ jobs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - task: Cache@2
-      inputs:
-        key: 'npm | "$(Agent.OS)" | package-lock.json'
-        path: '$(Pipeline.Workspace)/.npm'
-        cacheHitVar: 'CACHE_RESTORED'
-
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
 
     - script: npm run build
@@ -85,17 +73,11 @@ jobs:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    - task: Cache@2
-      inputs:
-        key: 'npm | "$(Agent.OS)" | package-lock.json'
-        path: '$(Pipeline.Workspace)/.npm'
-        cacheHitVar: 'CACHE_RESTORED'
-
-    - script: npm ci
+    - script: npm install
       displayName: 'Install Dependencies'
 
-    - script: npx jest --coverage
-      displayName: 'Run Tests with Coverage'
+    - script: npx jest
+      displayName: 'Run Integration Tests'
 
 - deployment: Deploy
   displayName: 'Deploy to $(environment) Environment'
@@ -111,5 +93,6 @@ jobs:
         - task: AzureWebApp@1
           inputs:
             azureSubscription: '$(azureServiceConnection)'
+            appType: webAppLinux
             appName: '$(webAppName)'
             package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
