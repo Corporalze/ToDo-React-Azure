@@ -2,10 +2,16 @@ trigger:
 - master
 
 variables:
-  vmImageName: 'ubuntu-latest'
-  environmentName: 'dev'
-  npm_config_cache: $(Pipeline.Workspace)/.npm
-  azureSubscription: 'AzurePipeline'
+  - group: CICD-Group 
+
+parameters:
+  - name: environment
+    type: string
+    default: 'Dev'
+    values:
+      - 'Dev'
+      - 'Test'
+      - 'Prod'
   
 stages:
 - stage: Build
@@ -75,5 +81,5 @@ stages:
             inputs:
               azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: 'your-awesome-app-name'
+              appName: '$(azureWebApp)'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
