@@ -24,10 +24,10 @@ jobs:
   steps:
     - task: NodeTool@0
       inputs:
-        versionSpec: '18.x'
+        versionSpec: '20.x'
       displayName: 'Install Node.js'
 
-    - script: npm install
+    - script: npm ci
       displayName: 'Install Dependencies'
 
     - script: npx next lint
@@ -42,10 +42,10 @@ jobs:
   steps:
     - task: NodeTool@0
       inputs:
-        versionSpec: '18.x'
+        versionSpec: '20.x'
       displayName: 'Install Node.js'
 
-    - script: npm install
+    - script: npm ci
       displayName: 'Install Dependencies'
 
     - script: npm run build
