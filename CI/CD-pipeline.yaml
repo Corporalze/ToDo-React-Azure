@@ -59,10 +59,15 @@ jobs:
         archiveFile: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
         replaceExistingArchive: true
 
-    - task: PublishPipelineArtifact@1
+    # - task: PublishPipelineArtifact@1
+    #   inputs:
+    #     targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
+    #     artifact: 'drop'
+    - task: PublishBuildArtifacts@1
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/nextjsapp.zip'
-        artifact: 'drop'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
 
 - job: IntegrationTests
   dependsOn: Build
@@ -90,8 +95,12 @@ jobs:
         - download: current
           artifact: 'drop'
           
-        - task: AzureWebApp@1
+        - task: AzureRmWebAppDeployment@4
           inputs:
+            ConnectionType: 'AzureRM'
             azureSubscription: '$(azureServiceConnection)'
+            appType: 'webAppLinux'
             appName: '$(webAppName)'
             package: '$(Pipeline.Workspace)/drop/nextjsapp.zip'
+            RuntimeStack: 'NODE|18-lts'
+            StartupCommand: 'npm run start'
