@@ -2,16 +2,10 @@ trigger:
 - master
 
 variables:
-  - group: CICD-Group 
-
-parameters:
-  - name: environment
-    type: string
-    default: 'Dev'
-    values:
-      - 'Dev'
-      - 'Test'
-      - 'Prod'
+  vmImageName: 'ubuntu-latest'
+  environmentName: 'dev'
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+  azureSubscription: 'AzurePipeline'
   
 stages:
 - stage: Build
@@ -61,9 +55,24 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
         ArtifactName: 'drop'
 
+- stage: Test
+  displayName: Test stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+    - job: Test
+      displayName: Test
+      steps:
+        - script: npm run lint
+          displayName: 'Run Linting'
+        - script: npm run format
+          displayName: 'Run Prettier'
+        - script: npm run test
+          displayName: 'Run jest'
+
 - stage: Deploy
   displayName: Deploy stage
-  dependsOn: Build
+  dependsOn: Test
   condition: succeeded()
     
   jobs:
@@ -81,5 +90,5 @@ stages:
             inputs:
               azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: '$(azureWebApp)'
+              appName: 'your-awesome-app-name'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
